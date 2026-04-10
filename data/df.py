@@ -53,11 +53,17 @@ df.rename(
 # df["pv_inst_per_hholds"] = df["pv_inst"] / df["hholds"]
 # df["pv_cap_per_hholds"] = df["pv_cap"] / df["hholds"]
 df["pv_cap_per_inst"] = df["pv_cap"] / df["pv_inst"]
+
 df["fdensity"] = df["firms"] / df["area"]
 df["pdensity"] = df["population"] / df["area"]
 df["hdensity"] = df["hholds"] / df["area"]
 df["assets"] = df["current_assets"] + df["fixed_assets"]
 df["adensity"] = df["assets"] / df["area"]
+
+df["fcapacity"] = df["firms"] / df["population"]
+df["hcapacity"] = df["hholds"] / df["population"]
+df["acapacity"] = df["assets"] / df["population"]
+
 
 
 def gini_total_weighted(gini_fixed, gini_current, mean_fixed, mean_current):
@@ -100,6 +106,10 @@ for c in [
     # "pv_inst_per_hholds",
     # "pv_cap_per_hholds",
     "pv_cap_per_inst",
+    "fcapacity",
+    "hcapacity",
+    "acapacity",
+    
 ]:
     if c in df.columns:
         df[f"log_{c}"] = log_transform(df[c])
