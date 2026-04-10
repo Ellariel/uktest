@@ -45,6 +45,7 @@ df.rename(
         "mean_bootstrap_current_assets": "current_assets",
         "gini_bootstrap_current_assets": "gini_current_assets",
         "earn_gini": "gini_earnings",
+        "count": "firms",
     },
     inplace=True,
 )
@@ -52,7 +53,7 @@ df.rename(
 # df["pv_inst_per_hholds"] = df["pv_inst"] / df["hholds"]
 # df["pv_cap_per_hholds"] = df["pv_cap"] / df["hholds"]
 df["pv_cap_per_inst"] = df["pv_cap"] / df["pv_inst"]
-df["fdensity"] = df["count"] / df["area"]
+df["fdensity"] = df["firms"] / df["area"]
 df["pdensity"] = df["population"] / df["area"]
 df["hdensity"] = df["hholds"] / df["area"]
 df["assets"] = df["current_assets"] + df["fixed_assets"]
@@ -92,7 +93,7 @@ for c in [
     "area",
     "ddays",
     "earnings",
-    "count",
+    "firms",
     "population",
     "house_price",
     # "mean_irradiance",
