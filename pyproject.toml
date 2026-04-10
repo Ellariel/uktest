@@ -18,4 +18,5 @@ dependencies = [
     "esda",
     "seaborn",
     "ipykernel",
+    "ipywidgets",
 ]
