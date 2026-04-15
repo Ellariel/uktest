@@ -1,5 +1,6 @@
 import os
 import pickle
+import warnings
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -9,6 +10,8 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 
 from weights import compute_weights
+
+warnings.simplefilter("ignore")
 
 base_dir = os.path.dirname(__file__)
 base_dir = os.path.abspath(os.path.join(base_dir, ".."))
@@ -66,17 +69,19 @@ def average_morans_i(i, i_var, method="two-tailed"):
 
 # Global spatial autocorrelation (Moran’s I)
 methods = ["inverse_distance", "k_nearest", "queen"]
+# variables = ["log_pv_cap", "log_pv_inst", "log_pv_cap_per_inst"]
+variables = ["pv_cap", "pv_inst", "pv_cap_per_inst"]
 
 moran_results_file = os.path.join(results_dir, "moran_results.pickle")
 if not os.path.exists(moran_results_file):
     pv_cap_moran_results = []
     for y in df["year"].unique():
         df_y = df[df["year"] == y].copy()
-        if len(df_y) > 0 and df_y["log_pv_cap"].notna().sum() > 0:
+        if len(df_y) > 0 and df_y[variables[0]].notna().sum() > 0:
             d = {"year": y}
             for m in methods:
                 w, X, Y = compute_weights(
-                    "log_pv_cap",
+                    variables[0],
                     ["area"],
                     data=df_y,
                     shape_data=shape_data,
@@ -94,11 +99,11 @@ if not os.path.exists(moran_results_file):
     pv_inst_moran_results = []
     for y in df["year"].unique():
         df_y = df[df["year"] == y].copy()
-        if len(df_y) > 0 and df_y["log_pv_inst"].notna().sum() > 0:
+        if len(df_y) > 0 and df_y[variables[1]].notna().sum() > 0:
             d = {"year": y}
             for m in methods:
                 w, X, Y = compute_weights(
-                    "log_pv_inst",
+                    variables[1],
                     ["area"],
                     data=df_y,
                     shape_data=shape_data,
@@ -116,11 +121,11 @@ if not os.path.exists(moran_results_file):
     pv_cap_per_inst_moran_results = []
     for y in df["year"].unique():
         df_y = df[df["year"] == y].copy()
-        if len(df_y) > 0 and df_y["pv_cap_per_inst"].notna().sum() > 0:
+        if len(df_y) > 0 and df_y[variables[2]].notna().sum() > 0:
             d = {"year": y}
             for m in methods:
                 w, X, Y = compute_weights(
-                    "pv_cap_per_inst",
+                    variables[2],
                     ["area"],
                     data=df_y,
                     shape_data=shape_data,
@@ -152,8 +157,11 @@ else:
         )
 
 labels = {
-    "log_pv_cap": "PV installed capacity",
-    "log_pv_inst": "PV installations",
+    # "log_pv_cap": "PV installed capacity",
+    # "log_pv_inst": "PV installations",
+    # "log_pv_cap_per_inst": "PV capacity per installation",
+    "pv_cap": "PV installed capacity",
+    "pv_inst": "PV installations",
     "pv_cap_per_inst": "PV capacity per installation",
     "I_inverse_distance": r"$W_{\text{inverse distance}}$",
     "I_k_nearest": r"$W_{\text{k-nearest}}$",
@@ -184,7 +192,7 @@ for m in methods:
     ax_left.fill_between(
         i.index, i.iloc[:, 0] - v.iloc[:, 0], i.iloc[:, 0] + v.iloc[:, 0], alpha=0.25
     )
-ax_left.set_title(labels["log_pv_cap"], fontsize=11)
+ax_left.set_title(labels[variables[0]], fontsize=11)
 ax_left.set_xlabel(None)
 ax_left.set_ylabel("Spatial autocorrelation measure (Moran's $I$)", fontsize=11)
 ax_left.legend(
@@ -214,7 +222,7 @@ for m in methods:
     ax_middle.fill_between(
         i.index, i.iloc[:, 0] - v.iloc[:, 0], i.iloc[:, 0] + v.iloc[:, 0], alpha=0.25
     )
-ax_middle.set_title(labels["log_pv_inst"], fontsize=11)
+ax_middle.set_title(labels[variables[1]], fontsize=11)
 ax_middle.set_xlabel(None)
 ax_middle.set_ylabel("", labelpad=-5)
 ax_middle.legend(
@@ -244,7 +252,7 @@ for m in methods:
     ax_right.fill_between(
         i.index, i.iloc[:, 0] - v.iloc[:, 0], i.iloc[:, 0] + v.iloc[:, 0], alpha=0.25
     )
-ax_right.set_title(labels["pv_cap_per_inst"], fontsize=11)
+ax_right.set_title(labels[variables[2]], fontsize=11)
 ax_right.set_xlabel(None)
 ax_right.set_ylabel("", labelpad=-5)
 ax_right.legend(

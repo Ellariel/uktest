@@ -123,7 +123,7 @@ for c in [
     # "w_on_inst",
     # "w_on_cap",
     "hholds",
-    "area",
+    # "area",
     # "ddays",
     "earnings",
     "firms",
