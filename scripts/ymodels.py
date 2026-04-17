@@ -81,7 +81,7 @@ if os.path.exists(results_file):
 else:
     for y in tqdm(y_vars):
         model_results.setdefault(y, {})
-        for year in set(df["year"]):
+        for year in set(df.dropna(subset=y)["year"]):
             d = df[df["year"] == year].copy()
             if len(d):
                 model_results[y].setdefault(year, {})
