@@ -101,13 +101,20 @@ else:
                     for w_name in w_methods:
                         model_results[y][x_group][m_name].setdefault(w_name, {})
                         base_vars = x_vars["baseline"].copy()
-                        if "FE" in m_name:
+                        try:
+                            f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {base_vars}"
+                            print(f)
+                            model_results[y][x_group][m_name][w_name][f] = (
+                                compute_model(m_name, w_name, y, base_vars, f)
+                            )
+                        except Exception as e:
+                            print(str(e))
                             base_vars.remove("irradiance")
-                        f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {base_vars}"
-                        print(f)
-                        model_results[y][x_group][m_name][w_name][f] = compute_model(
-                            m_name, w_name, y, base_vars, f
-                        )
+                            f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {base_vars}"
+                            print(f)
+                            model_results[y][x_group][m_name][w_name][f] = (
+                                compute_model(m_name, w_name, y, base_vars, f)
+                            )
 
             if x_group == "capacities":
                 for m_name in models.keys():
@@ -115,13 +122,32 @@ else:
                     for w_name in w_methods:
                         model_results[y][x_group][m_name].setdefault(w_name, {})
                         base_vars = x_vars["baseline"].copy()
-                        if "FE" in m_name:
+                        try:
+                            f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x_vars['capacities']} + {base_vars}"
+                            print(f)
+                            model_results[y][x_group][m_name][w_name][f] = (
+                                compute_model(
+                                    m_name,
+                                    w_name,
+                                    y,
+                                    x_vars["capacities"] + base_vars,
+                                    f,
+                                )
+                            )
+                        except Exception as e:
+                            print(str(e))
                             base_vars.remove("irradiance")
-                        f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x_vars['capacities']} + {base_vars}"
-                        print(f)
-                        model_results[y][x_group][m_name][w_name][f] = compute_model(
-                            m_name, w_name, y, x_vars["capacities"] + base_vars, f
-                        )
+                            f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x_vars['capacities']} + {base_vars}"
+                            print(f)
+                            model_results[y][x_group][m_name][w_name][f] = (
+                                compute_model(
+                                    m_name,
+                                    w_name,
+                                    y,
+                                    x_vars["capacities"] + base_vars,
+                                    f,
+                                )
+                            )
 
             if x_group == "densities":
                 for m_name in models.keys():
@@ -129,14 +155,22 @@ else:
                     for w_name in w_methods:
                         model_results[y][x_group][m_name].setdefault(w_name, {})
                         base_vars = x_vars["baseline"].copy()
-                        if "FE" in m_name:
+                        try:
+                            for x in x_list:
+                                f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x} + {base_vars}"
+                                print(f)
+                                model_results[y][x_group][m_name][w_name][f] = (
+                                    compute_model(m_name, w_name, y, [x] + base_vars, f)
+                                )
+                        except Exception as e:
+                            print(str(e))
                             base_vars.remove("irradiance")
-                        for x in x_list:
-                            f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x} + {base_vars}"
-                            print(f)
-                            model_results[y][x_group][m_name][w_name][f] = (
-                                compute_model(m_name, w_name, y, [x] + base_vars, f)
-                            )
+                            for x in x_list:
+                                f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x} + {base_vars}"
+                                print(f)
+                                model_results[y][x_group][m_name][w_name][f] = (
+                                    compute_model(m_name, w_name, y, [x] + base_vars, f)
+                                )
     with open(results_file, "wb") as f:
         pickle.dump(model_results, f)
 

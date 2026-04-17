@@ -2,6 +2,7 @@ raw_data/
 fame_data/
 old/
 *.pickle
+*.pickle_
 *.shx
 *.dbf
 
