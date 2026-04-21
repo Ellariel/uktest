@@ -1,4 +1,5 @@
 import os
+import copy
 import pickle
 import warnings
 import numpy as np
@@ -45,6 +46,8 @@ models = {
     "PooledOLS": PooledOLS,
     "PanelFE": PanelFE,
     "PanelRE": PanelRE,
+    "ML_LagFE(SLX)": ML_LagFE,
+    "ML_LagRE(SLX)": ML_LagRE,
 }
 w_methods = ["inverse_distance", "k_nearest", "queen"]
 y_vars = ["log_pv_cap", "log_pv_inst", "log_pv_cap_per_inst"]
@@ -67,15 +70,32 @@ def get_cached_weights(y, x, w_method, f):
         return w, X, Y
 
 
-def compute_model(m_method, w_method, y, x, f):
+def compute_model(m_method, w_method, y, x, f, fallback_x=None):
     w, X, Y = get_cached_weights(y, x, w_method, f)
     if w is not None:
-        model = None
+        params = {
+            "y": Y,
+            "x": X,
+            "w": w,
+            "name_y": y,
+            "name_x": x,
+            "name_w": w_method,
+            "slx_lags": 1 if "SLX" in m_method else 0,
+        }
         try:
-            model = models[m_method](Y, X, w, name_y=y, name_x=x, name_w=w_method)
+            return models[m_method.replace("(SLX)", "")](**params)
         except Exception as e:
             print(str(e))
-        return model
+            if fallback_x is not None:
+                return compute_model(
+                    m_method,
+                    w_method,
+                    y,
+                    fallback_x,
+                    f + f" (fallback: {fallback_x})",
+                    fallback_x=None,
+                )
+    return None
 
 
 cache_weights = {}
@@ -100,77 +120,62 @@ else:
                     model_results[y][x_group].setdefault(m_name, {})
                     for w_name in w_methods:
                         model_results[y][x_group][m_name].setdefault(w_name, {})
-                        base_vars = x_vars["baseline"].copy()
-                        try:
-                            f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {base_vars}"
-                            print(f)
-                            model_results[y][x_group][m_name][w_name][f] = (
-                                compute_model(m_name, w_name, y, base_vars, f)
-                            )
-                        except Exception as e:
-                            print(str(e))
-                            base_vars.remove("irradiance")
-                            f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {base_vars}"
-                            print(f)
-                            model_results[y][x_group][m_name][w_name][f] = (
-                                compute_model(m_name, w_name, y, base_vars, f)
-                            )
+                        base_vars = copy.deepcopy(x_vars["baseline"])
+                        fallback_vars = base_vars.copy()
+                        fallback_vars.remove("irradiance")
+                        f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {base_vars}"
+                        model_results[y][x_group][m_name][w_name][f] = compute_model(
+                            m_name,
+                            w_name,
+                            y,
+                            base_vars if "FE" not in m_name else fallback_vars,
+                            f,
+                            fallback_x=fallback_vars,
+                        )
 
             if x_group == "capacities":
                 for m_name in models.keys():
                     model_results[y][x_group].setdefault(m_name, {})
                     for w_name in w_methods:
                         model_results[y][x_group][m_name].setdefault(w_name, {})
-                        base_vars = x_vars["baseline"].copy()
-                        try:
-                            f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x_vars['capacities']} + {base_vars}"
-                            print(f)
-                            model_results[y][x_group][m_name][w_name][f] = (
-                                compute_model(
-                                    m_name,
-                                    w_name,
-                                    y,
-                                    x_vars["capacities"] + base_vars,
-                                    f,
-                                )
-                            )
-                        except Exception as e:
-                            print(str(e))
-                            base_vars.remove("irradiance")
-                            f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x_vars['capacities']} + {base_vars}"
-                            print(f)
-                            model_results[y][x_group][m_name][w_name][f] = (
-                                compute_model(
-                                    m_name,
-                                    w_name,
-                                    y,
-                                    x_vars["capacities"] + base_vars,
-                                    f,
-                                )
-                            )
+                        base_vars = copy.deepcopy(x_vars["baseline"])
+                        fallback_vars = base_vars.copy()
+                        fallback_vars.remove("irradiance")
+                        f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x_vars['capacities']} + {base_vars}"
+                        model_results[y][x_group][m_name][w_name][f] = compute_model(
+                            m_name,
+                            w_name,
+                            y,
+                            x_vars["capacities"] + base_vars
+                            if "FE" not in m_name
+                            else x_vars["capacities"] + fallback_vars,
+                            f,
+                            fallback_x=x_vars["capacities"] + fallback_vars,
+                        )
 
             if x_group == "densities":
                 for m_name in models.keys():
                     model_results[y][x_group].setdefault(m_name, {})
                     for w_name in w_methods:
                         model_results[y][x_group][m_name].setdefault(w_name, {})
-                        base_vars = x_vars["baseline"].copy()
-                        try:
-                            for x in x_list:
-                                f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x} + {base_vars}"
-                                print(f)
-                                model_results[y][x_group][m_name][w_name][f] = (
-                                    compute_model(m_name, w_name, y, [x] + base_vars, f)
+                        base_vars = copy.deepcopy(x_vars["baseline"])
+                        fallback_vars = base_vars.copy()
+                        fallback_vars.remove("irradiance")
+                        for x in x_list:
+                            f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x} + {base_vars}"
+                            model_results[y][x_group][m_name][w_name][f] = (
+                                compute_model(
+                                    m_name,
+                                    w_name,
+                                    y,
+                                    [x] + base_vars
+                                    if "FE" not in m_name
+                                    else [x] + fallback_vars,
+                                    f,
+                                    fallback_x=[x] + fallback_vars,
                                 )
-                        except Exception as e:
-                            print(str(e))
-                            base_vars.remove("irradiance")
-                            for x in x_list:
-                                f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x} + {base_vars}"
-                                print(f)
-                                model_results[y][x_group][m_name][w_name][f] = (
-                                    compute_model(m_name, w_name, y, [x] + base_vars, f)
-                                )
+                            )
+
     with open(results_file, "wb") as f:
         pickle.dump(model_results, f)
 
