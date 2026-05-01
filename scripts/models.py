@@ -85,7 +85,7 @@ def compute_model(m_method, w_method, y, x, f, fallback_x=None):
         try:
             return models[m_method.replace("(SLX)", "")](**params)
         except Exception as e:
-            print(str(e))
+            print(f"Error in {m_method}:{w_method}: {str(e)}")
             if fallback_x is not None:
                 print(f"Falling back to {fallback_x} for {m_method}:{w_method}")
                 return compute_model(
