@@ -54,7 +54,7 @@ y_vars = ["log_pv_cap", "log_pv_inst", "log_pv_cap_per_inst"]
 x_vars = {
     "densities": ["pdensity", "hdensity", "fdensity", "adensity"],
     "capacities": ["log_gdp_cap", "log_fcapacity", "log_hcapacity", "log_acapacity"],
-    "baseline": ["log_income", "log_hholds", "log_sunny_days"],  # 'log_house_price',
+    "baseline": ["log_income", "log_hholds", "log_sunny_hours"],  # 'log_house_price',
 }
 
 
@@ -87,6 +87,7 @@ def compute_model(m_method, w_method, y, x, f, fallback_x=None):
         except Exception as e:
             print(str(e))
             if fallback_x is not None:
+                print(f"Falling back to {fallback_x} for {m_method}:{w_method}")
                 return compute_model(
                     m_method,
                     w_method,
@@ -122,7 +123,7 @@ else:
                         model_results[y][x_group][m_name].setdefault(w_name, {})
                         base_vars = copy.deepcopy(x_vars["baseline"])
                         fallback_vars = base_vars.copy()
-                        fallback_vars.remove("log_sunny_days")
+                        fallback_vars.remove("log_sunny_hours")
                         f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {base_vars}"
                         model_results[y][x_group][m_name][w_name][f] = compute_model(
                             m_name,
@@ -140,7 +141,7 @@ else:
                         model_results[y][x_group][m_name].setdefault(w_name, {})
                         base_vars = copy.deepcopy(x_vars["baseline"])
                         fallback_vars = base_vars.copy()
-                        fallback_vars.remove("log_sunny_days")
+                        fallback_vars.remove("log_sunny_hours")
                         f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x_vars['capacities']} + {base_vars}"
                         model_results[y][x_group][m_name][w_name][f] = compute_model(
                             m_name,
@@ -160,7 +161,7 @@ else:
                         model_results[y][x_group][m_name].setdefault(w_name, {})
                         base_vars = copy.deepcopy(x_vars["baseline"])
                         fallback_vars = base_vars.copy()
-                        fallback_vars.remove("log_sunny_days")
+                        fallback_vars.remove("log_sunny_hours")
                         for x in x_list:
                             f = f"Running {m_name}:{w_name} for {y} ~ ({x_group}): {x} + {base_vars}"
                             model_results[y][x_group][m_name][w_name][f] = (

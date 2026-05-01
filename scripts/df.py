@@ -134,7 +134,7 @@ for c in [
     "fcapacity",
     "hcapacity",
     "acapacity",
-    "sunny_days",
+    "sunny_hours",
 ]:
     if c in df.columns:
         df[f"log_{c}"] = log_transform(df[c])
