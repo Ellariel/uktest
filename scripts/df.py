@@ -65,7 +65,7 @@ df.rename(
         # "gini_bootstrap_current_assets": "gini_current_assets",
         # "earn_gini": "gini_earnings",
         # "count": "firms",
-        "mean_irradiance": "irradiance",
+        # "sunny_days": "irradiance",
     },
     inplace=True,
 )
@@ -134,6 +134,7 @@ for c in [
     "fcapacity",
     "hcapacity",
     "acapacity",
+    "sunny_days",
 ]:
     if c in df.columns:
         df[f"log_{c}"] = log_transform(df[c])
