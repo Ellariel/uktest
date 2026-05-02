@@ -50,7 +50,7 @@ models = {
     "ML_LagRE(SLX)": ML_LagRE,
 }
 w_methods = ["inverse_distance", "k_nearest", "queen"]
-y_vars = ["log_pv_cap", "log_pv_inst", "log_pv_cap_per_inst"]
+y_vars = ["log_pv_cap", "log_pv_inst", "log_pv_cap_per_inst", "pv_cap_per_inst"]
 x_vars = {
     "densities": ["pdensity", "hdensity", "fdensity", "adensity"],
     "capacities": ["log_gdp_cap", "log_fcapacity", "log_hcapacity", "log_acapacity"],
