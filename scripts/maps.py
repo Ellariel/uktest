@@ -62,14 +62,14 @@ labels = {
     "pv_cap_per_inst": "PV capacity per installation\n[MW / installation]",
 }
 
-vmin_cap = df[["pv_cap_2014", f"pv_cap_2022"]].min().min()
-vmax_cap = df[["pv_cap_2014", f"pv_cap_2022"]].max().max()
+vmin_cap = df[["pv_cap_2014", "pv_cap_2022"]].min().min()
+vmax_cap = df[["pv_cap_2014", "pv_cap_2022"]].max().max()
 
-vmin_inst = df[["pv_inst_2014", f"pv_inst_2022"]].min().min()
-vmax_inst = df[["pv_inst_2014", f"pv_inst_2022"]].max().max()
+vmin_inst = df[["pv_inst_2014", "pv_inst_2022"]].min().min()
+vmax_inst = df[["pv_inst_2014", "pv_inst_2022"]].max().max()
 
-vmin_ratio = df[["pv_cap_per_inst_2014", f"pv_cap_per_inst_2022"]].min().min()
-vmax_ratio = df[["pv_cap_per_inst_2014", f"pv_cap_per_inst_2022"]].max().max()
+vmin_ratio = df[["pv_cap_per_inst_2014", "pv_cap_per_inst_2022"]].min().min()
+vmax_ratio = df[["pv_cap_per_inst_2014", "pv_cap_per_inst_2022"]].max().max()
 
 legend_kwds = {"fraction": 0.02, "pad": 0.01}
 cmap = plt.get_cmap("tab20b")
@@ -95,6 +95,15 @@ ax_left_top.set_title(labels["pv_cap"], fontsize=10)
 ax_left_top.set_xlabel(None)
 ax_left_top.set_ylabel(None)
 ax_left_top.set_axis_off()
+ax_left_top.text(
+    0.05,
+    0.95,
+    "a) 2014",
+    transform=ax_left_top.transAxes,
+    ha="center",
+    va="center",
+    fontsize=9,
+)
 
 ax_middle_top = fig.add_subplot(2, 3, 2)
 df.plot(
@@ -156,6 +165,15 @@ cbar_ax.yaxis.set_major_formatter(fmt)
 ax_left_bottom.set_xlabel(None)
 ax_left_bottom.set_ylabel(None)
 ax_left_bottom.set_axis_off()
+ax_left_bottom.text(
+    0.05,
+    0.95,
+    "b) 2022",
+    transform=ax_left_bottom.transAxes,
+    ha="center",
+    va="center",
+    fontsize=9,
+)
 
 ax_middle_bottom = fig.add_subplot(2, 3, 5)
 df.plot(
