@@ -87,6 +87,7 @@ df.plot(
     legend=True,
     legend_kwds=legend_kwds,
 )
+df.boundary.plot(ax=ax_left_top, color="darkgray", linewidth=0.06)
 cbar_ax = ax_left_top.get_figure().axes[-1]  # last axis = colorbar
 fmt = ScalarFormatter(useMathText=True)
 fmt.set_powerlimits((0, 0))
@@ -115,6 +116,7 @@ df.plot(
     legend=True,
     legend_kwds=legend_kwds,
 )
+df.boundary.plot(ax=ax_middle_top, color="darkgray", linewidth=0.06)
 cbar_ax = ax_middle_top.get_figure().axes[-1]  # last axis = colorbar
 fmt = ScalarFormatter(useMathText=True)
 fmt.set_powerlimits((0, 0))
@@ -134,6 +136,7 @@ df.plot(
     legend=True,
     legend_kwds=legend_kwds,
 )
+df.boundary.plot(ax=ax_right_top, color="darkgray", linewidth=0.06)
 cbar_ax = ax_right_top.get_figure().axes[-1]  # last axis = colorbar
 fmt = ScalarFormatter(useMathText=True)
 fmt.set_powerlimits((0, 0))
@@ -157,6 +160,7 @@ df.plot(
     legend=True,
     legend_kwds=legend_kwds,
 )
+df.boundary.plot(ax=ax_left_bottom, color="darkgray", linewidth=0.06)
 cbar_ax = ax_left_bottom.get_figure().axes[-1]  # last axis = colorbar
 fmt = ScalarFormatter(useMathText=True)
 fmt.set_powerlimits((0, 0))
@@ -185,6 +189,7 @@ df.plot(
     legend=True,
     legend_kwds=legend_kwds,
 )
+df.boundary.plot(ax=ax_middle_bottom, color="darkgray", linewidth=0.06)
 cbar_ax = ax_middle_bottom.get_figure().axes[-1]  # last axis = colorbar
 fmt = ScalarFormatter(useMathText=True)
 fmt.set_powerlimits((0, 0))
@@ -204,6 +209,7 @@ df.plot(
     legend=True,
     legend_kwds=legend_kwds,
 )
+df.boundary.plot(ax=ax_right_bottom, color="darkgray", linewidth=0.06)
 cbar_ax = ax_right_bottom.get_figure().axes[-1]  # last axis = colorbar
 fmt = ScalarFormatter(useMathText=True)
 fmt.set_powerlimits((0, 0))
