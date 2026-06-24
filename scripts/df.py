@@ -15,8 +15,10 @@ print("data_dir:", data_dir)
 
 fame = pd.read_pickle(os.path.join(base_dir, "fame_data", "melted.pkl"))
 osn = pd.read_csv(os.path.join(base_dir, "raw_data", "df.csv"), sep=";")
+fit = pd.read_csv(os.path.join(base_dir, "raw_data", "FIT", "fit.csv"))
 
 df = pd.merge(osn, fame, how="left", on=["name", "year"])
+df = pd.merge(df, fit, how="left", on=["name", "year", "region", "code"])
 df["firms"] = df[[c for c in df.columns if "count_notna" in c]].max(axis=1)
 df.drop(
     [
@@ -70,7 +72,14 @@ df.rename(
     inplace=True,
 )
 
+df["pv_cap"] = df["pv_cap"] * 1000  # MW -> kW
 df["pv_cap_per_inst"] = df["pv_cap"] / df["pv_inst"]
+
+df["pv_cap_diff"] = df["pv_cap"] - df["pv_cap"].shift(1)
+df["pv_inst_diff"] = df["pv_inst"] - df["pv_inst"].shift(1)
+df["pv_cap_per_inst_diff"] = df["pv_cap_diff"] / df["pv_inst_diff"]
+
+df["pv_cap_per_inst_fit"] = df["pv_cap_fit"] / df["pv_inst_fit"]
 
 df["fdensity"] = df["firms"] / df["area"]
 df["pdensity"] = df["population"] / df["area"]
@@ -120,6 +129,13 @@ for c in [
     # "vad_tax",
     "pv_cap",
     "pv_inst",
+    "pv_cap_per_inst",
+    "pv_cap_fit",
+    "pv_inst_fit",
+    "pv_cap_per_inst_fit",
+    "pv_cap_diff",
+    "pv_inst_diff",
+    "pv_cap_per_inst_diff",
     # "w_on_inst",
     # "w_on_cap",
     "hholds",
@@ -130,7 +146,6 @@ for c in [
     "population",
     "house_price",
     # "irradiance",
-    "pv_cap_per_inst",
     "fcapacity",
     "hcapacity",
     "acapacity",
