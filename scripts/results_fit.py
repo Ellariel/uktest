@@ -191,12 +191,12 @@ def get_results(r, w=None):
 
 model_results = {}
 cache_weights = {}
-results_file = os.path.join(results_dir, "model_results.pickle")
+results_file = os.path.join(results_dir, "model_results_fit.pickle")
 if os.path.exists(results_file):
     with open(results_file, "rb") as f:
         model_results = pickle.load(f)
 
-weights_file = os.path.join(results_dir, "cache_weights.pickle")
+weights_file = os.path.join(results_dir, "cache_weights_fit.pickle")
 if os.path.exists(weights_file):
     with open(weights_file, "rb") as f:
         cache_weights = pickle.load(f)
@@ -356,12 +356,12 @@ def get_full_table(
 
 
 y_vars = [
-    "log_pv_cap",
-    "log_pv_inst",
-    "log_pv_cap_per_inst",
-    # "log_pv_cap_fit",
-    # "log_pv_inst_fit",
-    # "log_pv_cap_per_inst_fit",
+    # "log_pv_cap",
+    # "log_pv_inst",
+    # "log_pv_cap_per_inst",
+    "log_pv_cap_fit",
+    "log_pv_inst_fit",
+    "log_pv_cap_per_inst_fit",
 ]
 for y in y_vars:
     r, e, t = get_full_table(
