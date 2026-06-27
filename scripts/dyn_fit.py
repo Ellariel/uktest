@@ -33,6 +33,8 @@ print("results_dir:", results_dir)
 df = pd.read_csv(os.path.join(data_dir, "df.csv"))
 df = df.sort_values(by=["year", "name"])
 df = df[(df["year"] >= 2010) & (df["year"] <= 2019)]
+df = df[df["region"] != "Northern Ireland"]
+
 
 labels = {
     "log_pv_cap": "PV installed capacity [kW]",
@@ -87,10 +89,11 @@ d = (
     .pivot(index="year", columns="region", values="pv_cap_per_inst_fit")
 )
 d = d.rename(columns=labels)
-d.plot(ax=ax_right, marker="o", logy=False, color=palette, linewidth=2)
+d.plot(ax=ax_right, marker="o", color=palette, linewidth=2, logy=False)
 ax_right.set_title(labels["pv_cap_per_inst"], fontsize=11)
 ax_right.set_xlabel(None)
 ax_right.set_ylabel(None, labelpad=-5)
+ax_right.set_ylim([2.0, 4.0])
 ax_right.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), fontsize=9, frameon=False, ncols=3
 )

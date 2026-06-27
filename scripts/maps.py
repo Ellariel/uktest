@@ -57,9 +57,9 @@ df = df.join(
 )
 
 labels = {
-    "pv_cap": "PV installed capacity\n[MW]",
+    "pv_cap": "PV installed capacity\n[kW]",
     "pv_inst": "PV installations\n[Count]",
-    "pv_cap_per_inst": "PV capacity per installation\n[MW / installation]",
+    "pv_cap_per_inst": "PV capacity per installation\n[kW / installation]",
 }
 
 vmin_cap = df[["pv_cap_2014", "pv_cap_2022"]].min().min()

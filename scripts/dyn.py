@@ -32,11 +32,13 @@ print("results_dir:", results_dir)
 
 df = pd.read_csv(os.path.join(data_dir, "df.csv"))
 df = df.sort_values(by=["year", "name"])
+df = df[df["region"] != "Northern Ireland"]
+
 
 labels = {
-    "log_pv_cap": "PV installed capacity [MW]",
+    "log_pv_cap": "PV installed capacity [kW]",
     "log_pv_inst": "PV installations [Count]",
-    "pv_cap_per_inst": "PV capacity per installation [MW / installation]",
+    "pv_cap_per_inst": "PV capacity per installation [kW / installation]",
 }
 
 fig = plt.figure(figsize=(6.0 * 3, 5.5))
@@ -50,7 +52,7 @@ d = (
     .pivot(index="year", columns="region", values="pv_cap")
 )
 d = d.rename(columns=labels)
-d.plot(ax=ax_left, marker="o", color=palette, linewidth=2)
+d.plot(ax=ax_left, marker="o", color=palette, linewidth=2, logy=True)
 ax_left.set_title(labels["log_pv_cap"], fontsize=11)
 ax_left.set_xlabel(None)
 ax_left.set_ylabel(None, labelpad=-5)
@@ -68,7 +70,7 @@ d = (
     .pivot(index="year", columns="region", values="pv_inst")
 )
 d = d.rename(columns=labels)
-d.plot(ax=ax_middle, marker="o", color=palette, linewidth=2)
+d.plot(ax=ax_middle, marker="o", color=palette, linewidth=2, logy=True)
 ax_middle.set_title(labels["log_pv_inst"], fontsize=11)
 ax_middle.set_xlabel(None)
 ax_middle.set_ylabel(None, labelpad=-5)
@@ -86,10 +88,11 @@ d = (
     .pivot(index="year", columns="region", values="pv_cap_per_inst")
 )
 d = d.rename(columns=labels)
-d.plot(ax=ax_right, marker="o", logy=True, color=palette, linewidth=2)
+d.plot(ax=ax_right, marker="o", color=palette, linewidth=2, logy=False)
 ax_right.set_title(labels["pv_cap_per_inst"], fontsize=11)
 ax_right.set_xlabel(None)
 ax_right.set_ylabel(None, labelpad=-5)
+ax_right.set_ylim([3.0, 25.0])
 ax_right.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), fontsize=9, frameon=False, ncols=3
 )

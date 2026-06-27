@@ -18,7 +18,7 @@ osn = pd.read_csv(os.path.join(base_dir, "raw_data", "df.csv"), sep=";")
 fit = pd.read_csv(os.path.join(base_dir, "raw_data", "FIT", "fit.csv"))
 
 df = pd.merge(osn, fame, how="left", on=["name", "year"])
-df = pd.merge(df, fit, how="left", on=["name", "year", "region", "code"])
+df = pd.merge(df, fit, how="left", on=["name", "year"])
 df["firms"] = df[[c for c in df.columns if "count_notna" in c]].max(axis=1)
 df.drop(
     [
@@ -75,11 +75,15 @@ df.rename(
 df["pv_cap"] = df["pv_cap"] * 1000  # MW -> kW
 df["pv_cap_per_inst"] = df["pv_cap"] / df["pv_inst"]
 
-df["pv_cap_diff"] = df["pv_cap"] - df["pv_cap"].shift(1)
-df["pv_inst_diff"] = df["pv_inst"] - df["pv_inst"].shift(1)
-df["pv_cap_per_inst_diff"] = df["pv_cap_diff"] / df["pv_inst_diff"]
 
+df["pv_cap_fit"] = df["pv_cap_fit_cum"]
+df["pv_inst_fit"] = df["pv_inst_fit_cum"]
 df["pv_cap_per_inst_fit"] = df["pv_cap_fit"] / df["pv_inst_fit"]
+
+df = df.sort_values(by=["name", "year"])
+# df["pv_cap_diff"] = df["pv_cap"] - df["pv_cap"].shift(1)
+# df["pv_inst_diff"] = df["pv_inst"] - df["pv_inst"].shift(1)
+# df["pv_cap_per_inst_diff"] = df["pv_cap_diff"] / df["pv_inst_diff"]
 
 df["fdensity"] = df["firms"] / df["area"]
 df["pdensity"] = df["population"] / df["area"]
@@ -108,10 +112,7 @@ df["gini_assets"] = gini_total_weighted(
 """
 
 df.drop(
-    [
-        "fixed_assets",
-        "current_assets",
-    ],
+    ["fixed_assets", "current_assets", "pv_cap_fit_cum", "pv_inst_fit_cum"],
     inplace=True,
     axis=1,
 )
@@ -133,9 +134,9 @@ for c in [
     "pv_cap_fit",
     "pv_inst_fit",
     "pv_cap_per_inst_fit",
-    "pv_cap_diff",
-    "pv_inst_diff",
-    "pv_cap_per_inst_diff",
+    # "pv_cap_diff",
+    # "pv_inst_diff",
+    # "pv_cap_per_inst_diff",
     # "w_on_inst",
     # "w_on_cap",
     "hholds",
@@ -158,3 +159,22 @@ df.to_csv(os.path.join(data_dir, "df.csv"), index=False)
 
 print("N =", len(df.dropna()["name"].drop_duplicates()))
 print("T =", len(df.dropna()["year"].dropna().drop_duplicates()))
+
+
+df = pd.read_csv(os.path.join(data_dir, "df.csv"))
+df = df.sort_values(by=["year", "name"])
+
+d = df[["year", "name", "pv_cap", "pv_inst", "pv_cap_fit", "pv_inst_fit"]]
+diffs = []
+for _, data in d.groupby("name"):
+    data = data.sort_values(by=["year"]).copy()
+    data.set_index(["year", "name"], inplace=True)
+    for i in data.columns:
+        data[i] = pd.to_numeric(data[i])
+        data[f"{i}_diff"] = data[i] - data[i].shift(1)
+        data[f"log_{i}_diff"] = log_transform(data[f"{i}_diff"])
+    data = data[[c for c in data.columns if "_diff" in c]]
+    diffs.append(data.reset_index())
+
+df = pd.merge(df, pd.concat(diffs, axis=0), how="left", on=["year", "name"])
+df.to_csv(os.path.join(data_dir, "df.csv"), index=False)
