@@ -158,7 +158,26 @@ for c in [
 df.to_csv(os.path.join(data_dir, "df.csv"), index=False)
 
 print("N =", len(df.dropna()["name"].drop_duplicates()))
-print("T =", len(df.dropna()["year"].dropna().drop_duplicates()))
+# print("T =", len(df.dropna()["year"].dropna().drop_duplicates()))
+filter_col = [
+    "name",
+    "year",
+    "fdensity",
+    "adensity",
+    "pdensity",
+    "hdensity",
+    "income",
+    "hholds",
+    "sunny_hours",
+]
+t = sorted(df.dropna(subset=filter_col + ["pv_inst"])["year"].drop_duplicates())
+n = sorted(df.dropna(subset=filter_col + ["pv_inst"])["name"].drop_duplicates())
+print("N(OSN):", len(n))
+print("T(OSN):", len(t), t)
+t = sorted(df.dropna(subset=filter_col + ["pv_inst_fit"])["year"].drop_duplicates())
+n = sorted(df.dropna(subset=filter_col + ["pv_inst_fit"])["name"].drop_duplicates())
+print("N(FIT):", len(n))
+print("T(FIT):", len(t), t)
 
 
 df = pd.read_csv(os.path.join(data_dir, "df.csv"))
