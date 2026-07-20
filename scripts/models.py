@@ -29,7 +29,7 @@ print("data_dir:", data_dir)
 print("results_dir:", results_dir)
 
 df = pd.read_csv(os.path.join(data_dir, "df.csv"))
-df = df[(df["year"] >= 2014) & (df["year"] <= 2022)]
+df = df[(df["year"] >= 2014) & (df["year"] <= 2021)]
 df = df.sort_values(by=["year", "name"])  # imortant for spreg!!!!
 shape_data = (
     gpd.read_file(
@@ -51,10 +51,10 @@ models = {
     "ML_LagRE(SLX)": ML_LagRE,
 }
 w_methods = ["inverse_distance", "k_nearest", "queen"]
-y_vars = ["log_pv_cap", "log_pv_inst", "log_pv_cap_per_inst", "pv_cap_per_inst"]
+y_vars = ["log_pv_cap", "log_pv_inst"]  # , "log_pv_cap_per_inst", "pv_cap_per_inst"]
 x_vars = {
     "densities": ["pdensity", "hdensity", "fdensity", "adensity"],
-    "capacities": ["log_gdp_cap", "log_fcapacity", "log_hcapacity", "log_acapacity"],
+    # "capacities": ["log_gdp_cap", "log_fcapacity", "log_hcapacity", "log_acapacity"],
     "baseline": ["log_income", "log_hholds", "log_sunny_hours"],  # 'log_house_price',
 }
 

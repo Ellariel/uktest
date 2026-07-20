@@ -54,12 +54,12 @@ w_methods = ["inverse_distance", "k_nearest", "queen"]
 y_vars = [
     "log_pv_cap_fit",
     "log_pv_inst_fit",
-    "log_pv_cap_per_inst_fit",
-    "pv_cap_per_inst_fit",
+    # "log_pv_cap_per_inst_fit",
+    # "pv_cap_per_inst_fit",
 ]
 x_vars = {
     "densities": ["pdensity", "hdensity", "fdensity", "adensity"],
-    "capacities": ["log_gdp_cap", "log_fcapacity", "log_hcapacity", "log_acapacity"],
+    # "capacities": ["log_gdp_cap", "log_fcapacity", "log_hcapacity", "log_acapacity"],
     "baseline": ["log_income", "log_hholds", "log_sunny_hours"],  # 'log_house_price',
 }
 

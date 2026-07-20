@@ -358,7 +358,7 @@ def get_full_table(
 y_vars = [
     "log_pv_cap",
     "log_pv_inst",
-    "log_pv_cap_per_inst",
+    # "log_pv_cap_per_inst",
     # "log_pv_cap_fit",
     # "log_pv_inst_fit",
     # "log_pv_cap_per_inst_fit",
@@ -382,7 +382,7 @@ for y in y_vars:
         ],
         x_list=[],
     )
-
+    """
     r, e, t = get_full_table(
         y=y,
         x_vars="capacities",
@@ -401,7 +401,7 @@ for y in y_vars:
         ],
         x_list=[],
     )
-
+    """
     r, e, t = get_full_table(
         y=y,
         x_vars="densities",
