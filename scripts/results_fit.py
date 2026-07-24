@@ -382,7 +382,7 @@ for y in y_vars:
         ],
         x_list=[],
     )
-    """
+    """"""
     r, e, t = get_full_table(
         y=y,
         x_vars="capacities",
@@ -401,7 +401,7 @@ for y in y_vars:
         ],
         x_list=[],
     )
-    """
+    """"""
     r, e, t = get_full_table(
         y=y,
         x_vars="densities",
