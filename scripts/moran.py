@@ -22,7 +22,7 @@ print("data_dir:", data_dir)
 print("results_dir:", results_dir)
 
 df = pd.read_csv(os.path.join(data_dir, "df.csv"))
-df = df[(df["year"] >= 2014) & (df["year"] <= 2022)]
+df = df[(df["year"] >= 2014) & (df["year"] <= 2021)]
 df = df.sort_values(by=["year", "name"])
 shape_data = (
     gpd.read_file(
@@ -70,8 +70,10 @@ def average_morans_i(i, i_var, method="two-tailed"):
 
 # Global spatial autocorrelation (Moran’s I)
 methods = ["inverse_distance", "k_nearest", "queen"]
-# variables = ["log_pv_cap", "log_pv_inst", "log_pv_cap_per_inst"]
-variables = ["pv_cap", "pv_inst", "pv_cap_per_inst"]
+variables = [
+    "pv_cap",
+    "pv_inst",
+]
 
 moran_results_file = os.path.join(results_dir, "moran_results.pickle")
 if not os.path.exists(moran_results_file):
@@ -118,7 +120,7 @@ if not os.path.exists(moran_results_file):
                     d[f"VI_{m}"] = mi.VI_rand
             pv_inst_moran_results.append(d)
     pv_inst_moran_results = pd.DataFrame(pv_inst_moran_results)
-
+    """
     pv_cap_per_inst_moran_results = []
     for y in df["year"].unique():
         df_y = df[df["year"] == y].copy()
@@ -140,43 +142,49 @@ if not os.path.exists(moran_results_file):
                     d[f"VI_{m}"] = mi.VI_rand
             pv_cap_per_inst_moran_results.append(d)
     pv_cap_per_inst_moran_results = pd.DataFrame(pv_cap_per_inst_moran_results)
-
+    """
     moran_results = {
         "pv_cap": pv_cap_moran_results,
         "pv_inst": pv_inst_moran_results,
-        "pv_cap_per_inst": pv_cap_per_inst_moran_results,
+        # "pv_cap_per_inst": pv_cap_per_inst_moran_results,
     }
     with open(moran_results_file, "wb") as f:
         pickle.dump(moran_results, f)
 else:
     with open(moran_results_file, "rb") as f:
         moran_results = pickle.load(f)
-        pv_cap_moran_results, pv_inst_moran_results, pv_cap_per_inst_moran_results = (
+        (
+            pv_cap_moran_results,
+            pv_inst_moran_results,
+        ) = (  # , pv_cap_per_inst_moran_results
             moran_results["pv_cap"],
             moran_results["pv_inst"],
-            moran_results["pv_cap_per_inst"],
+            # moran_results["pv_cap_per_inst"],
         )
 
 labels = {
     # "log_pv_cap": "PV installed capacity",
     # "log_pv_inst": "PV installations",
     # "log_pv_cap_per_inst": "PV capacity per installation",
-    "pv_cap": "PV installed capacity",
-    "pv_inst": "PV installations",
+    "pv_cap": "PV installed capacity [kW], ONS",
+    "pv_inst": "PV installations [Count], ONS",
+    "log_pv_cap": "PV installed capacity [kW], ONS",
+    "log_pv_inst": "PV installations [Count], ONS",
     "pv_cap_per_inst": "PV capacity per installation",
     "I_inverse_distance": r"$W_{\text{inverse distance}}$",
     "I_k_nearest": r"$W_{\text{k-nearest}}$",
     "I_queen": r"$W_{\text{queen}}$",
 }
 
-fig = plt.figure(figsize=(6.0 * 3, 5.5))
-ax_left = fig.add_subplot(1, 3, 1)
+fig = plt.figure(figsize=(6.0 * 2, 5.5))
+ax_left = fig.add_subplot(1, 2, 1)
 d = pv_cap_moran_results
 for m in methods:
     i = d[["year"] + [i for i in d.columns if i.startswith(f"I_{m}")]].set_index("year")
     v = d[["year"] + [i for i in d.columns if i.startswith(f"VI_{m}")]].set_index(
         "year"
     )
+    p = d[["year"] + [i for i in d.columns if i.startswith(f"p_{m}")]].set_index("year")
     iv = average_morans_i(i, v)
     labels_ = {
         k: (
@@ -197,10 +205,10 @@ ax_left.set_title(labels[variables[0]], fontsize=11)
 ax_left.set_xlabel(None)
 ax_left.set_ylabel("Spatial autocorrelation measure (Moran's $I$)", fontsize=11)
 ax_left.legend(
-    loc="upper center", bbox_to_anchor=(0.5, -0.05), fontsize=9, frameon=False
-)
+    loc="upper right", fontsize=9, frameon=False
+)  # bbox_to_anchor=(0.5, -0.05),
 
-ax_middle = fig.add_subplot(1, 3, 2)
+ax_middle = fig.add_subplot(1, 2, 2)
 d = pv_inst_moran_results
 for m in methods:
     i = d[["year"] + [i for i in d.columns if i.startswith(f"I_{m}")]].set_index("year")
@@ -227,9 +235,9 @@ ax_middle.set_title(labels[variables[1]], fontsize=11)
 ax_middle.set_xlabel(None)
 ax_middle.set_ylabel("", labelpad=-5)
 ax_middle.legend(
-    loc="upper center", bbox_to_anchor=(0.5, -0.05), fontsize=9, frameon=False
-)
-
+    loc="upper right", fontsize=9, frameon=False
+)  # bbox_to_anchor=(0.5, -0.05),
+"""
 ax_right = fig.add_subplot(1, 3, 3)
 d = pv_cap_per_inst_moran_results
 for m in methods:
@@ -259,7 +267,7 @@ ax_right.set_ylabel("", labelpad=-5)
 ax_right.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), fontsize=9, frameon=False
 )
-
+"""
 fig.subplots_adjust(wspace=0.001)
 fig.tight_layout(pad=1.01)
 fig.savefig(

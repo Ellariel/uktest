@@ -35,11 +35,11 @@ df2014 = df[df["year"] == 2014].rename(
         "pv_cap_per_inst": "pv_cap_per_inst_2014",
     }
 )
-df2022 = df[df["year"] == 2022].rename(
+df2021 = df[df["year"] == 2021].rename(
     columns={
-        "pv_cap": "pv_cap_2022",
-        "pv_inst": "pv_inst_2022",
-        "pv_cap_per_inst": "pv_cap_per_inst_2022",
+        "pv_cap": "pv_cap_2021",
+        "pv_inst": "pv_inst_2021",
+        "pv_cap_per_inst": "pv_cap_per_inst_2021",
     }
 )
 
@@ -50,26 +50,26 @@ df = shape_data.join(
     on="code",
 )
 df = df.join(
-    df2022[["code", "pv_cap_2022", "pv_inst_2022", "pv_cap_per_inst_2022"]].set_index(
+    df2021[["code", "pv_cap_2021", "pv_inst_2021", "pv_cap_per_inst_2021"]].set_index(
         "code"
     ),
     on="code",
 )
 
 labels = {
-    "pv_cap": "PV installed capacity\n[kW]",
-    "pv_inst": "PV installations\n[Count]",
+    "pv_cap": "PV installed capacity\n[kW], ONS",
+    "pv_inst": "PV installations\n[Count], ONS",
     "pv_cap_per_inst": "PV capacity per installation\n[kW / installation]",
 }
 
-vmin_cap = df[["pv_cap_2014", "pv_cap_2022"]].min().min()
-vmax_cap = df[["pv_cap_2014", "pv_cap_2022"]].max().max()
+vmin_cap = df[["pv_cap_2014", "pv_cap_2021"]].min().min()
+vmax_cap = df[["pv_cap_2014", "pv_cap_2021"]].max().max()
 
-vmin_inst = df[["pv_inst_2014", "pv_inst_2022"]].min().min()
-vmax_inst = df[["pv_inst_2014", "pv_inst_2022"]].max().max()
+vmin_inst = df[["pv_inst_2014", "pv_inst_2021"]].min().min()
+vmax_inst = df[["pv_inst_2014", "pv_inst_2021"]].max().max()
 
-vmin_ratio = df[["pv_cap_per_inst_2014", "pv_cap_per_inst_2022"]].min().min()
-vmax_ratio = df[["pv_cap_per_inst_2014", "pv_cap_per_inst_2022"]].max().max()
+vmin_ratio = df[["pv_cap_per_inst_2014", "pv_cap_per_inst_2021"]].min().min()
+vmax_ratio = df[["pv_cap_per_inst_2014", "pv_cap_per_inst_2021"]].max().max()
 
 legend_kwds = {"fraction": 0.02, "pad": 0.01}
 cmap = plt.get_cmap("tab20b")
@@ -77,7 +77,7 @@ fig = plt.figure(figsize=(9.5, 6))
 
 year = 2014
 
-ax_left_top = fig.add_subplot(2, 3, 1)
+ax_left_top = fig.add_subplot(2, 2, 1)
 df.plot(
     ax=ax_left_top,
     cmap=cmap,
@@ -106,7 +106,7 @@ ax_left_top.text(
     fontsize=9,
 )
 
-ax_middle_top = fig.add_subplot(2, 3, 2)
+ax_middle_top = fig.add_subplot(2, 2, 2)
 df.plot(
     ax=ax_middle_top,
     cmap=cmap,
@@ -125,7 +125,7 @@ ax_middle_top.set_title(labels["pv_inst"], fontsize=10)
 ax_middle_top.set_xlabel(None)
 ax_middle_top.set_ylabel(None)
 ax_middle_top.set_axis_off()
-
+"""
 ax_right_top = fig.add_subplot(2, 3, 3)
 df.plot(
     ax=ax_right_top,
@@ -145,12 +145,12 @@ ax_right_top.set_title(labels["pv_cap_per_inst"], fontsize=10)
 ax_right_top.set_xlabel(None)
 ax_right_top.set_ylabel(None)
 ax_right_top.set_axis_off()
+"""
+
+year = 2021
 
 
-year = 2022
-
-
-ax_left_bottom = fig.add_subplot(2, 3, 4)
+ax_left_bottom = fig.add_subplot(2, 2, 3)
 df.plot(
     ax=ax_left_bottom,
     cmap=cmap,
@@ -172,14 +172,14 @@ ax_left_bottom.set_axis_off()
 ax_left_bottom.text(
     0.05,
     0.95,
-    "b) 2022",
+    "b) 2021",
     transform=ax_left_bottom.transAxes,
     ha="center",
     va="center",
     fontsize=9,
 )
 
-ax_middle_bottom = fig.add_subplot(2, 3, 5)
+ax_middle_bottom = fig.add_subplot(2, 2, 4)
 df.plot(
     ax=ax_middle_bottom,
     cmap=cmap,
@@ -198,7 +198,7 @@ cbar_ax.yaxis.set_major_formatter(fmt)
 ax_middle_bottom.set_xlabel(None)
 ax_middle_bottom.set_ylabel(None)
 ax_middle_bottom.set_axis_off()
-
+"""
 ax_right_bottom = fig.add_subplot(2, 3, 6)
 df.plot(
     ax=ax_right_bottom,
@@ -218,7 +218,7 @@ cbar_ax.yaxis.set_major_formatter(fmt)
 ax_right_bottom.set_xlabel(None)
 ax_right_bottom.set_ylabel(None)
 ax_right_bottom.set_axis_off()
-
+"""
 
 fig.subplots_adjust(wspace=0.001)
 fig.tight_layout(pad=1.01)
