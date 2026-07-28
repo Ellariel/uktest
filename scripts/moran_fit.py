@@ -71,8 +71,8 @@ def average_morans_i(i, i_var, method="two-tailed"):
 # Global spatial autocorrelation (Moran’s I)
 methods = ["inverse_distance", "k_nearest", "queen"]
 variables = [
-    "pv_cap",
-    "pv_inst",
+    "pv_cap_fit",
+    "pv_inst_fit",
 ]
 
 moran_results_file = os.path.join(results_dir, "moran_results_fit.pickle")
@@ -167,11 +167,11 @@ labels = {
     # "log_pv_cap": "PV installed capacity",
     # "log_pv_inst": "PV installations",
     # "log_pv_cap_per_inst": "PV capacity per installation",
-    "pv_cap": "PV installed capacity [kW], FIT",
-    "pv_inst": "PV installations [Count], FIT",
-    "log_pv_cap": "PV installed capacity [kW], FIT",
-    "log_pv_inst": "PV installations [Count], FIT",
-    "pv_cap_per_inst": "PV capacity per installation",
+    "pv_cap_fit": "PV installed capacity [kW], FIT",
+    "pv_inst_fit": "PV installations [Count], FIT",
+    "log_pv_cap_fit": "PV installed capacity [kW], FIT",
+    "log_pv_inst_fit": "PV installations [Count], FIT",
+    "pv_cap_per_inst_fit": "PV capacity per installation",
     "I_inverse_distance": r"$W_{\text{inverse distance}}$",
     "I_k_nearest": r"$W_{\text{k-nearest}}$",
     "I_queen": r"$W_{\text{queen}}$",
