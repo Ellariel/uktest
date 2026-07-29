@@ -8,8 +8,9 @@ from numbers import Number
 from esda.moran import Moran
 from scipy.stats import norm
 import matplotlib.pyplot as plt
+from libpysal.weights import w_subset
 
-from weights import compute_weights
+from weights import compute_weights, compute_weights_new
 
 warnings.simplefilter("ignore")
 
@@ -22,7 +23,7 @@ print("data_dir:", data_dir)
 print("results_dir:", results_dir)
 
 df = pd.read_csv(os.path.join(data_dir, "df.csv"))
-df = df[(df["year"] >= 2014) & (df["year"] <= 2021)]
+df = df[(df["year"] >= 2014) & (df["year"] <= 2019)]
 df = df.sort_values(by=["year", "name"])
 shape_data = (
     gpd.read_file(
@@ -47,108 +48,133 @@ def get_stars(p, p001="***", p01="**", p05="*", p10="+", p_=""):
     return p_
 
 
-def average_morans_i(i, i_var, method="two-tailed"):
+def morans_i_time_permutation(
+    X,
+    W_master,
+    n_perm=500,
+    seed=13,
+):
     """
-    I: array of Moran's I values
-    var_I: array of variances of Moran's I
-    """
-    i = np.array(i, dtype=float)
-    var_i = np.array(i_var, dtype=float)
-    w = 1 / var_i  # weights = inverse variance
-    i_bar = np.sum(w * i) / np.sum(w)  # weighted mean
-    se = np.sqrt(1 / np.sum(w))  # standard error
-    z = i_bar / se  # test statistic
-    p = 1 - norm.cdf(np.abs(z))  # p-value (two-tailed)
-    p = p * 2 if method == "two-tailed" else p
-    return {
-        "i_mean": i_bar,
-        "z": z,
-        "se": se,
-        "p-value": p,
-    }
-
-
-def combine_morans_i(i, var_i, expected_i=None, method="two-tailed"):
-    """
-    Combine Moran's I statistics across time using a weighted Stouffer Z-test.
+    Global test for Moran's I across time using permutation.
 
     Parameters
     ----------
-    i : array-like
-        Moran's I values for each time point.
+    X : ndarray (n_units, n_times)
+        Data matrix with np.nan for missing observations.
 
-    var_i : array-like
-        Variance of Moran's I for each time point.
+    W_master : libpysal.weights.W
+        Spatial weights for all units.
 
-    expected_i : float or array-like, optional
-        Expected Moran's I under the null.
-        If None, assumes E[I]=0.
-        For classical Moran's I use:
-            expected_i = -1/(n-1)
+    n_perm : int
+        Number of Monte Carlo permutations.
 
-    method : {"two-tailed", "greater", "less"}
+    seed : int or None
 
     Returns
     -------
     dict
-        I_mean      : inverse-variance weighted mean Moran's I
-        se_mean     : standard error of weighted mean
-        z_combined  : combined Z statistic
-        p_value     : combined p-value
-        weights     : normalized weights
     """
 
-    i = np.asarray(i, dtype=float)
-    var_i = np.asarray(var_i, dtype=float)
+    rng = np.random.default_rng(seed)
 
-    mask = np.isfinite(i) & np.isfinite(var_i) & (var_i > 0)
-    i = i[mask]
-    var_i = var_i[mask]
+    _, n_times = X.shape
 
-    if expected_i is None:
-        expected_i = np.zeros_like(i)
-    else:
-        expected_i = np.broadcast_to(expected_i, i.shape)
+    # ---------- observed ----------
+    I_obs = np.empty(n_times)
+    EI_obs = np.empty(n_times)
+    VI_obs = np.empty(n_times)
 
-    # inverse-variance weights
-    w = 1.0 / var_i
-    w_norm = w / w.sum()
+    for t in range(n_times):
+        keep = ~np.isnan(X[:, t])
 
-    # weighted mean Moran's I (descriptive)
-    i_mean = np.sum(w_norm * i)
-    se_mean = np.sqrt(1.0 / np.sum(w))
+        x = X[keep, t]
 
-    # standardize each Moran's I
-    z = (i - expected_i) / np.sqrt(var_i)
+        ids = np.asarray(W_master.id_order)[keep]
+        # Wt = W_master.subset(ids)
+        Wt = w_subset(W_master, ids)
+        print(
+            len(ids),
+            Wt.n,
+            Wt.n_components,
+            Wt.pct_nonzero,
+        )
 
-    # weighted Stouffer combination
-    z_combined = np.sum(np.sqrt(w_norm) * z) / np.sqrt(np.sum(w_norm))
+        mi = Moran(x, Wt, permutations=0)
 
-    if method == "greater":
-        p = 1 - norm.cdf(z_combined)
-    elif method == "less":
-        p = norm.cdf(z_combined)
-    else:
-        p = 2 * (1 - norm.cdf(abs(z_combined)))
+        I_obs[t] = mi.I
+        EI_obs[t] = mi.EI
+        VI_obs[t] = mi.VI_norm
+
+        print(
+            t,
+            len(x),
+            mi.I,
+            mi.EI,
+            mi.VI_norm,
+            # mi.s0,
+            np.isnan(x).sum(),
+        )
+
+    z_obs = (I_obs - EI_obs) / np.sqrt(VI_obs)
+
+    weights_obs = 1 / VI_obs
+    weights_obs /= weights_obs.sum()
+
+    T_obs = np.sum(weights_obs * z_obs)
+
+    # ---------- permutation ----------
+    T_perm = np.empty(n_perm)
+
+    for p in range(n_perm):
+        I_perm = np.empty(n_times)
+        EI_perm = np.empty(n_times)
+        VI_perm = np.empty(n_times)
+
+        for t in range(n_times):
+            keep = ~np.isnan(X[:, t])
+
+            x = X[keep, t].copy()
+
+            # permute available observations only
+            x = rng.permutation(x)
+
+            ids = np.asarray(W_master.id_order)[keep]
+            # Wt = W_master.subset(ids)
+            Wt = w_subset(W_master, ids)
+
+            mi = Moran(x, Wt, permutations=0)
+
+            I_perm[t] = mi.I
+            EI_perm[t] = mi.EI
+            VI_perm[t] = mi.VI_norm
+
+        z_perm = (I_perm - EI_perm) / np.sqrt(VI_perm)
+
+        # recompute weights for this permutation
+        weights_perm = 1 / VI_perm
+        weights_perm /= weights_perm.sum()
+
+        T_perm[p] = np.sum(weights_perm * z_perm)
+
+    p_value = (np.sum(np.abs(T_perm) >= np.abs(T_obs)) + 1) / (n_perm + 1)
 
     return {
-        "i_mean": i_mean,
-        "se": se_mean,
-        "z": z_combined,
-        "p-value": p,
-        "weights": w_norm,
+        "I_time": I_obs,
+        "z_time": z_obs,
+        "weights": weights_obs,
+        "statistic": T_obs,
+        "p_value": p_value,
+        "null_distribution": T_perm,
     }
 
 
 # Global spatial autocorrelation (Moran’s I)
 methods = ["inverse_distance", "k_nearest", "queen"]
-variables = [
-    "pv_cap",
-    "pv_inst",
-]
+variables = ["pv_cap_fit", "pv_inst_fit", "morans_i_time"]
 
-moran_results_file = os.path.join(results_dir, "moran_results.pickle")
+moran_results_file = os.path.join(results_dir, "moran_results_fit.pickle")
 if not os.path.exists(moran_results_file):
+    """
     pv_cap_moran_results = []
     for y in df["year"].unique():
         df_y = df[df["year"] == y].copy()
@@ -163,6 +189,7 @@ if not os.path.exists(moran_results_file):
                     method=m,
                     verbose=False,
                 )
+                # print(df_y)
                 if w is not None:
                     mi = Moran(Y, w, transformation="R")
                     d[f"I_{m}"] = mi.I
@@ -193,6 +220,7 @@ if not os.path.exists(moran_results_file):
             pv_inst_moran_results.append(d)
     pv_inst_moran_results = pd.DataFrame(pv_inst_moran_results)
     """
+    """
     pv_cap_per_inst_moran_results = []
     for y in df["year"].unique():
         df_y = df[df["year"] == y].copy()
@@ -215,6 +243,30 @@ if not os.path.exists(moran_results_file):
             pv_cap_per_inst_moran_results.append(d)
     pv_cap_per_inst_moran_results = pd.DataFrame(pv_cap_per_inst_moran_results)
     """
+
+    pv_cap_morans_i_time_results = {}
+    for m in methods:
+        w, X, Y = compute_weights_new(
+            variables[0],
+            ["area"],
+            data=df,
+            shape_data=shape_data,
+            method=m,
+            verbose=False,
+        )
+        # print(Y, Y.shape)
+        X = (
+            Y[["code", "year", variables[0]]].pivot(
+                index="code", columns="year", values=variables[0]
+            )
+            # .reindex(w.id_order)
+        )
+        # print(X, X.shape)
+        # print(w, w.id_order)
+        mi = morans_i_time_permutation(X.reset_index(drop=True).to_numpy(), w)
+        print(f"Method: {m}, Moran's I time permutation p-value: {mi}")
+        break
+
     moran_results = {
         variables[0]: pv_cap_moran_results,
         variables[1]: pv_inst_moran_results,
@@ -231,18 +283,18 @@ else:
         ) = (  # , pv_cap_per_inst_moran_results
             moran_results[variables[0]],
             moran_results[variables[1]],
-            # moran_results[variables[2]],
+            # moran_results["pv_cap_per_inst_fit"],
         )
 
 labels = {
     # "log_pv_cap": "PV installed capacity",
     # "log_pv_inst": "PV installations",
     # "log_pv_cap_per_inst": "PV capacity per installation",
-    "pv_cap": "PV installed capacity, ONS",
-    "pv_inst": "PV installations, ONS",
-    "log_pv_cap": "PV installed capacity, ONS",
-    "log_pv_inst": "PV installations, ONS",
-    # "pv_cap_per_inst": "PV capacity per installation",
+    "pv_cap_fit": "PV installed capacity, FIT",
+    "pv_inst_fit": "PV installations, FIT",
+    "log_pv_cap_fit": "PV installed capacity, FIT",
+    "log_pv_inst_fit": "PV installations, FIT",
+    # "pv_cap_per_inst_fit": "PV capacity per installation",
     "I_inverse_distance": r"$W_{\text{inverse distance}}$",
     "I_k_nearest": r"$W_{\text{k-nearest}}$",
     "I_queen": r"$W_{\text{queen}}$",
@@ -257,8 +309,8 @@ for m in methods:
         "year"
     )
     p = d[["year"] + [i for i in d.columns if i.startswith(f"p_{m}")]].set_index("year")
-    print(p)
-    iv = combine_morans_i(i, v)  # average_morans_i(i, v)
+    # print(p)
+    iv = {"i_mean": 5}  # average_morans_i(i, v)
     labels_ = {
         k: (
             f"{v}, ${iv['i_mean']:.3f}" + "^{" + f"{get_stars(iv['p-value'])}" + "}$"
@@ -288,9 +340,7 @@ for m in methods:
     v = d[["year"] + [i for i in d.columns if i.startswith(f"VI_{m}")]].set_index(
         "year"
     )
-    p = d[["year"] + [i for i in d.columns if i.startswith(f"p_{m}")]].set_index("year")
-    print(p)
-    iv = combine_morans_i(i, v)  # average_morans_i(i, v)
+    iv = {"i_mean": 5}  # average_morans_i(i, v)
     labels_ = {
         k: (
             f"{v}, ${iv['i_mean']:.3f}" + "^{" + f"{get_stars(iv['p-value'])}" + "}$"
@@ -346,8 +396,8 @@ ax_right.legend(
 fig.subplots_adjust(wspace=0.001)
 fig.tight_layout(pad=1.01)
 fig.savefig(
-    os.path.join(results_dir, "fig_moran.png"),
+    os.path.join(results_dir, "fig_moran_fit.pdf"),
     dpi=1200,
     bbox_inches="tight",
-    format="png",
+    format="pdf",
 )
