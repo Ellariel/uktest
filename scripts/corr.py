@@ -16,6 +16,7 @@ print("data_dir:", data_dir)
 print("results_dir:", results_dir)
 
 df = pd.read_csv(os.path.join(data_dir, "df.csv"))
+df = df[(df["year"] >= 2014) & (df["year"] <= 2022)]
 df = df.sort_values(by=["year", "name"])
 
 
@@ -90,9 +91,9 @@ vars = [
 ]
 
 vars = [
-    "gdp_cap",
+    # "gdp_cap",
     "income",
-    "earnings",
+    # "earnings",
     "population",
     "hholds",
     "firms",
@@ -106,12 +107,12 @@ vars = [
     # "gini_earnings",
     # "gini_employees",
     "fcapacity",
-    "hcapacity",
+    # "hcapacity",
     "acapacity",
 ]
 
 corr_results = []
-for k in ["pv_cap", "pv_inst", "pv_cap_per_inst"]:
+for k in ["pv_cap", "pv_inst", "pv_cap_fit", "pv_inst_fit"]:  # , "pv_cap_per_inst"]:
     d = {}
     for v in vars:
         df_v = df[[k, v, "year"]].dropna()
@@ -165,6 +166,32 @@ for y in df["year"].unique():
         pv_inst_corr_results.append(d)
 pv_inst_corr_results = pd.DataFrame(pv_inst_corr_results)
 
+pv_cap_fit_corr_results = []
+for y in df["year"].unique():
+    df_y = df[df["year"] == y].copy()
+    if len(df_y) > 0 and df_y["pv_cap_fit"].notna().sum() > 0:
+        d = {"year": y}
+        for v in vars:
+            r_v, p = spearmanr(df_y["pv_cap_fit"], df_y[v], nan_policy="omit")
+            d[f"r_{v}"] = r_v
+            d[f"p_{v}"] = p
+        pv_cap_fit_corr_results.append(d)
+pv_cap_fit_corr_results = pd.DataFrame(pv_cap_fit_corr_results)
+
+pv_inst_fit_corr_results = []
+for y in df["year"].unique():
+    df_y = df[df["year"] == y].copy()
+    if len(df_y) > 0 and df_y["pv_inst_fit"].notna().sum() > 0:
+        d = {"year": y}
+        for v in vars:
+            r_v, p = spearmanr(df_y["pv_inst_fit"], df_y[v], nan_policy="omit")
+            d[f"r_{v}"] = r_v
+            d[f"p_{v}"] = p
+        pv_inst_fit_corr_results.append(d)
+pv_inst_fit_corr_results = pd.DataFrame(pv_inst_fit_corr_results)
+
+
+"""
 pv_cap_per_inst_corr_results = []
 for y in df["year"].unique():
     df_y = df[df["year"] == y].copy()
@@ -176,11 +203,11 @@ for y in df["year"].unique():
             d[f"p_{v}"] = p
         pv_cap_per_inst_corr_results.append(d)
 pv_cap_per_inst_corr_results = pd.DataFrame(pv_cap_per_inst_corr_results)
-
+"""
 
 labels = {  # "r_log_gdp_cap": "GDP per capita",
     "r_income": "Income",
-    "r_earnings": "Earnings",
+    # "r_earnings": "Earnings",
     "r_house_price": "House price",
     "r_population": "Population",
     "r_hholds": "Households",
@@ -190,24 +217,26 @@ labels = {  # "r_log_gdp_cap": "GDP per capita",
     "r_hdensity": "$D$(Households)",
     "r_fdensity": "$D$(Firms)",
     "r_adensity": "$D$(Firm assets)",
-    "r_gdp_cap": "GDP per capita",
+    # "r_gdp_cap": "GDP per capita",
     "r_fcapacity": "Firms per capita",
-    "r_hcapacity": "Households per capita",
+    # "r_hcapacity": "Households per capita",
     "r_acapacity": "Firm assets per capita",
     # "r_gini_earnings": "$G$(Earnings)",
     # "r_gini_assets": "$G$(Firm assets)",
     # "r_gini_employees": "$G$(Employees)",
-    "pv_cap": "PV installed capacity",
-    "pv_inst": "PV installations",
-    "pv_cap_per_inst": "PV capacity per installation",
+    "pv_cap": "PV installed capacity, ONS",
+    "pv_inst": "PV installations, ONS",
+    "pv_cap_fit": "PV installed capacity, FIT",
+    "pv_inst_fit": "PV installations, FIT",
+    # "pv_cap_per_inst": "PV capacity per installation",
 }
 
-fig = plt.figure(figsize=(5.3 * 3, 4.5 * 3))
-
+fig = plt.figure(figsize=(5.3 * 4, 4.5 * 3))
+#############################ONS
 vars1 = [  # "log_gdp_cap",
     "income",
     "house_price",
-    "earnings",
+    # "earnings",
     "population",
     "hholds",
     # "log_employees",
@@ -221,7 +250,7 @@ vars1 = [  # "log_gdp_cap",
     # "gini_employees",
 ]
 
-ax_left = fig.add_subplot(3, 3, 1)
+ax_left = fig.add_subplot(3, 4, 1)
 d = pv_cap_corr_results.copy()
 d = d[["year"] + [c for v in vars1 for c in d.columns if v in str(c)]]
 d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
@@ -243,7 +272,7 @@ ax_left.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
 )
 
-ax_middle = fig.add_subplot(3, 3, 2)
+ax_middle = fig.add_subplot(3, 4, 2)
 d = pv_inst_corr_results.copy()
 d = d[["year"] + [c for v in vars1 for c in d.columns if v in str(c)]]
 d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
@@ -264,7 +293,7 @@ ax_middle.set_ylabel("", labelpad=-5)
 ax_middle.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
 )
-
+"""
 ax_right = fig.add_subplot(3, 3, 3)
 d = pv_cap_per_inst_corr_results.copy()
 d = d[["year"] + [c for v in vars1 for c in d.columns if v in str(c)]]
@@ -286,7 +315,7 @@ ax_right.set_ylabel("", labelpad=-5)
 ax_right.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
 )
-
+"""
 vars2 = [  # "log_gdp_cap",
     # "log_income",
     # "log_earnings",
@@ -302,7 +331,7 @@ vars2 = [  # "log_gdp_cap",
     # "gini_employees",
 ]
 
-ax_left = fig.add_subplot(3, 3, 4)
+ax_left = fig.add_subplot(3, 4, 5)
 d = pv_cap_corr_results.copy()
 d = d[["year"] + [c for v in vars2 for c in d.columns if v in str(c)]]
 d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
@@ -324,7 +353,7 @@ ax_left.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
 )
 
-ax_middle = fig.add_subplot(3, 3, 5)
+ax_middle = fig.add_subplot(3, 4, 6)
 d = pv_inst_corr_results.copy()
 d = d[["year"] + [c for v in vars2 for c in d.columns if v in str(c)]]
 d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
@@ -345,8 +374,8 @@ ax_middle.set_ylabel("", labelpad=-5)
 ax_middle.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
 )
-
-ax_right = fig.add_subplot(3, 3, 6)
+"""
+ax_right = fig.add_subplot(3, 2, 5)
 d = pv_cap_per_inst_corr_results.copy()
 d = d[["year"] + [c for v in vars2 for c in d.columns if v in str(c)]]
 d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
@@ -367,7 +396,7 @@ ax_right.set_ylabel("", labelpad=-5)
 ax_right.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
 )
-
+"""
 
 vars3 = [  # "log_gdp_cap",
     # "log_income",
@@ -382,13 +411,13 @@ vars3 = [  # "log_gdp_cap",
     # "gini_assets",
     # "gini_earnings",
     # "gini_employees",
-    "gdp_cap",
+    # "gdp_cap",
     "fcapacity",
-    "hcapacity",
+    # "hcapacity",
     "acapacity",
 ]
 
-ax_left = fig.add_subplot(3, 3, 7)
+ax_left = fig.add_subplot(3, 4, 9)
 d = pv_cap_corr_results.copy()
 d = d[["year"] + [c for v in vars3 for c in d.columns if v in str(c)]]
 d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
@@ -410,7 +439,7 @@ ax_left.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=1, fontsize=9, frameon=False
 )
 
-ax_middle = fig.add_subplot(3, 3, 8)
+ax_middle = fig.add_subplot(3, 4, 10)
 d = pv_inst_corr_results.copy()
 d = d[["year"] + [c for v in vars3 for c in d.columns if v in str(c)]]
 d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
@@ -431,7 +460,7 @@ ax_middle.set_ylabel("", labelpad=-5)
 ax_middle.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=1, fontsize=9, frameon=False
 )
-
+"""
 ax_right = fig.add_subplot(3, 3, 9)
 d = pv_cap_per_inst_corr_results.copy()
 d = d[["year"] + [c for v in vars3 for c in d.columns if v in str(c)]]
@@ -453,25 +482,286 @@ ax_right.set_ylabel("", labelpad=-5)
 ax_right.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=1, fontsize=9, frameon=False
 )
+"""
+
+#############################FIT
+
+
+vars1 = [  # "log_gdp_cap",
+    "income",
+    "house_price",
+    # "earnings",
+    "population",
+    "hholds",
+    # "log_employees",
+    "firms",
+    # "pdensity",
+    # "hdensity",
+    # "fdensity",
+    # "adensity",
+    # "gini_assets",
+    # "gini_earnings",
+    # "gini_employees",
+]
+
+ax_left = fig.add_subplot(3, 4, 3)
+d = pv_cap_corr_results.copy()
+d = d[["year"] + [c for v in vars1 for c in d.columns if v in str(c)]]
+d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
+labels_ = {
+    k: f"{v}, ${r['pv_cap_fit']}$".replace("*", r"{\ast}")
+    for k, v in labels.items()
+    for i, r in corr_results.iterrows()
+    if i == k[2:]
+}
+d = d.rename(columns=labels_).set_index("year")
+d.plot(
+    ax=ax_left,
+    marker="o",
+)
+ax_left.set_title(labels["pv_cap_fit"], fontsize=11)
+ax_left.set_xlabel(None)
+# ax_left.set_ylabel("Spearman's correlation coefficient", fontsize=11)
+ax_left.legend(
+    loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
+)
+
+ax_middle = fig.add_subplot(3, 4, 4)
+d = pv_inst_corr_results.copy()
+d = d[["year"] + [c for v in vars1 for c in d.columns if v in str(c)]]
+d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
+labels_ = {
+    k: f"{v}, ${r['pv_inst_fit']}$".replace("*", r"{\ast}")
+    for k, v in labels.items()
+    for i, r in corr_results.iterrows()
+    if i == k[2:]
+}
+d = d.rename(columns=labels_).set_index("year")
+d.plot(
+    ax=ax_middle,
+    marker="o",
+)
+ax_middle.set_title(labels["pv_inst_fit"], fontsize=11)
+ax_middle.set_xlabel(None)
+ax_middle.set_ylabel("", labelpad=-5)
+ax_middle.legend(
+    loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
+)
+"""
+ax_right = fig.add_subplot(3, 3, 3)
+d = pv_cap_per_inst_corr_results.copy()
+d = d[["year"] + [c for v in vars1 for c in d.columns if v in str(c)]]
+d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
+labels_ = {
+    k: f"{v}, ${r['pv_cap_per_inst']}$".replace("*", r"{\ast}")
+    for k, v in labels.items()
+    for i, r in corr_results.iterrows()
+    if i == k[2:]
+}
+d = d.rename(columns=labels_).set_index("year")
+d.plot(
+    ax=ax_right,
+    marker="o",
+)
+ax_right.set_title(labels["pv_cap_per_inst"], fontsize=11)
+ax_right.set_xlabel(None)
+ax_right.set_ylabel("", labelpad=-5)
+ax_right.legend(
+    loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
+)
+"""
+vars2 = [  # "log_gdp_cap",
+    # "log_income",
+    # "log_earnings",
+    # "log_population",
+    # "log_hholds",
+    # "log_employees",
+    "pdensity",
+    "hdensity",
+    "fdensity",
+    "adensity",
+    # "gini_assets",
+    # "gini_earnings",
+    # "gini_employees",
+]
+
+ax_left = fig.add_subplot(3, 4, 7)
+d = pv_cap_corr_results.copy()
+d = d[["year"] + [c for v in vars2 for c in d.columns if v in str(c)]]
+d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
+labels_ = {
+    k: f"{v}, ${r['pv_cap_fit']}$".replace("*", r"{\ast}")
+    for k, v in labels.items()
+    for i, r in corr_results.iterrows()
+    if i == k[2:]
+}
+d = d.rename(columns=labels_).set_index("year")
+d.plot(
+    ax=ax_left,
+    marker="o",
+)
+# ax_left.set_title(labels['log_pv_cap'], fontsize=11)
+ax_left.set_xlabel(None)
+ax_left.set_ylabel("Spearman's correlation coefficient", fontsize=11)
+ax_left.legend(
+    loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
+)
+
+ax_middle = fig.add_subplot(3, 4, 8)
+d = pv_inst_corr_results.copy()
+d = d[["year"] + [c for v in vars2 for c in d.columns if v in str(c)]]
+d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
+labels_ = {
+    k: f"{v}, ${r['pv_inst_fit']}$".replace("*", r"{\ast}")
+    for k, v in labels.items()
+    for i, r in corr_results.iterrows()
+    if i == k[2:]
+}
+d = d.rename(columns=labels_).set_index("year")
+d.plot(
+    ax=ax_middle,
+    marker="o",
+)
+# ax_middle.set_title(labels['log_pv_inst'], fontsize=11)
+ax_middle.set_xlabel(None)
+ax_middle.set_ylabel("", labelpad=-5)
+ax_middle.legend(
+    loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
+)
+"""
+ax_right = fig.add_subplot(3, 2, 5)
+d = pv_cap_per_inst_corr_results.copy()
+d = d[["year"] + [c for v in vars2 for c in d.columns if v in str(c)]]
+d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
+labels_ = {
+    k: f"{v}, ${r['pv_cap_per_inst']}$".replace("*", r"{\ast}")
+    for k, v in labels.items()
+    for i, r in corr_results.iterrows()
+    if i == k[2:]
+}
+d = d.rename(columns=labels_).set_index("year")
+d.plot(
+    ax=ax_right,
+    marker="o",
+)
+# ax_right.set_title(labels['pv_cap_per_inst'], fontsize=11)
+ax_right.set_xlabel(None)
+ax_right.set_ylabel("", labelpad=-5)
+ax_right.legend(
+    loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
+)
+"""
+
+vars3 = [  # "log_gdp_cap",
+    # "log_income",
+    # "log_earnings",
+    # "log_population",
+    # "log_hholds",
+    # "log_employees",
+    # "pdensity",
+    # "hdensity",
+    # "fdensity",
+    # "adensity",
+    # "gini_assets",
+    # "gini_earnings",
+    # "gini_employees",
+    # "gdp_cap",
+    "fcapacity",
+    # "hcapacity",
+    "acapacity",
+]
+
+ax_left = fig.add_subplot(3, 4, 11)
+d = pv_cap_corr_results.copy()
+d = d[["year"] + [c for v in vars3 for c in d.columns if v in str(c)]]
+d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
+labels_ = {
+    k: f"{v}, ${r['pv_cap_fit']}$".replace("*", r"{\ast}")
+    for k, v in labels.items()
+    for i, r in corr_results.iterrows()
+    if i == k[2:]
+}
+d = d.rename(columns=labels_).set_index("year")
+d.plot(
+    ax=ax_left,
+    marker="o",
+)
+# ax_left.set_title(labels['log_pv_cap'], fontsize=11)
+ax_left.set_xlabel(None)
+# ax_left.set_ylabel("Spearman's correlation coefficient", fontsize=11)
+ax_left.legend(
+    loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=1, fontsize=9, frameon=False
+)
+
+ax_middle = fig.add_subplot(3, 4, 12)
+d = pv_inst_corr_results.copy()
+d = d[["year"] + [c for v in vars3 for c in d.columns if v in str(c)]]
+d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
+labels_ = {
+    k: f"{v}, ${r['pv_inst_fit']}$".replace("*", r"{\ast}")
+    for k, v in labels.items()
+    for i, r in corr_results.iterrows()
+    if i == k[2:]
+}
+d = d.rename(columns=labels_).set_index("year")
+d.plot(
+    ax=ax_middle,
+    marker="o",
+)
+# ax_middle.set_title(labels['log_pv_inst'], fontsize=11)
+ax_middle.set_xlabel(None)
+ax_middle.set_ylabel("", labelpad=-5)
+ax_middle.legend(
+    loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=1, fontsize=9, frameon=False
+)
+"""
+ax_right = fig.add_subplot(3, 3, 9)
+d = pv_cap_per_inst_corr_results.copy()
+d = d[["year"] + [c for v in vars3 for c in d.columns if v in str(c)]]
+d = d[["year"] + [i for i in d.columns if i.startswith("r_")]]
+labels_ = {
+    k: f"{v}, ${r['pv_cap_per_inst']}$".replace("*", r"{\ast}")
+    for k, v in labels.items()
+    for i, r in corr_results.iterrows()
+    if i == k[2:]
+}
+d = d.rename(columns=labels_).set_index("year")
+d.plot(
+    ax=ax_right,
+    marker="o",
+)
+# ax_right.set_title(labels['pv_cap_per_inst'], fontsize=11)
+ax_right.set_xlabel(None)
+ax_right.set_ylabel("", labelpad=-5)
+ax_right.legend(
+    loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=1, fontsize=9, frameon=False
+)
+"""
 
 
 fig.subplots_adjust(wspace=0.001)
 fig.tight_layout(pad=1.01)
 fig.savefig(
-    os.path.join(results_dir, "fig_corr1.pdf"),
+    os.path.join(results_dir, "fig_corr1.png"),
     dpi=1200,
     bbox_inches="tight",
-    format="pdf",
+    format="png",
 )
+
+
+######FIG2
+
 
 vars = [
     "pv_cap",
     "pv_inst",
-    "pv_cap_per_inst",
+    "pv_cap_fit",
+    "pv_inst_fit",
+    # "pv_cap_per_inst",
     # "log_gdp_cap",
     "house_price",
     "income",
-    "earnings",
+    # "earnings",
     "assets",
     "population",
     "hholds",
@@ -484,9 +774,9 @@ vars = [
     # "gini_earnings",
     # "gini_assets",
     # "gini_employees",
-    "gdp_cap",
+    # "gdp_cap",
     "fcapacity",
-    "hcapacity",
+    # "hcapacity",
     "acapacity",
 ]
 full_corr_results_r = {}
@@ -515,12 +805,14 @@ for v1 in vars:
             full_corr_results_p[v1][v2] = r_a["p-value"]
 
 labels = {
-    "pv_cap": "PV inst.\ncapacity",
-    "pv_inst": "PV inst.",
-    "pv_cap_per_inst": "PV capacity\nper inst.",
+    "pv_cap": "PV inst.\ncapacity, ONS",
+    "pv_inst": "PV inst., ONS",
+    "pv_cap_fit": "PV inst.\ncapacity, FIT",
+    "pv_inst_fit": "PV inst., FIT",
+    # "pv_cap_per_inst": "PV capacity\nper inst.",
     # "log_gdp_cap": "GDP\nper capita\n",
     "income": "Income",
-    "earnings": "Earnings",
+    # "earnings": "Earnings",
     "assets": "Firm assets",
     "house_price": "House price",
     "population": "Population",
@@ -534,9 +826,9 @@ labels = {
     # "gini_earnings": "$G$(Earnings)",
     # "gini_assets": "$G$(Firm assets)",
     # "gini_employees": "$G$(Employees)",
-    "gdp_cap": "GDP\nper capita\n",
+    # "gdp_cap": "GDP\nper capita\n",
     "fcapacity": "Firms\nper capita",
-    "hcapacity": "Households\nper capita",
+    # "hcapacity": "Households\nper capita",
     "acapacity": "Firm assets\nper capita",
 }
 
@@ -569,8 +861,8 @@ ax_left = sns.heatmap(
 )
 fig.tight_layout(pad=1.01)
 fig.savefig(
-    os.path.join(results_dir, "fig_corr2.pdf"),
+    os.path.join(results_dir, "fig_corr2.png"),
     dpi=1200,
     bbox_inches="tight",
-    format="pdf",
+    format="png",
 )
