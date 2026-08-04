@@ -514,6 +514,7 @@ labels_ = {
     for i, r in corr_results.iterrows()
     if i == k[2:]
 }
+d = d[d["year"] <= 2019]
 d = d.rename(columns=labels_).set_index("year")
 d.plot(
     ax=ax_left,
@@ -525,6 +526,7 @@ ax_left.set_xlabel(None)
 ax_left.legend(
     loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=2, fontsize=9, frameon=False
 )
+# ax_left.set_xlim(2013.8, 2019.2)
 
 ax_middle = fig.add_subplot(3, 4, 4)
 d = pv_inst_corr_results.copy()
@@ -536,6 +538,7 @@ labels_ = {
     for i, r in corr_results.iterrows()
     if i == k[2:]
 }
+d = d[d["year"] <= 2019]
 d = d.rename(columns=labels_).set_index("year")
 d.plot(
     ax=ax_middle,
@@ -595,6 +598,7 @@ labels_ = {
     for i, r in corr_results.iterrows()
     if i == k[2:]
 }
+d = d[d["year"] <= 2019]
 d = d.rename(columns=labels_).set_index("year")
 d.plot(
     ax=ax_left,
@@ -617,6 +621,7 @@ labels_ = {
     for i, r in corr_results.iterrows()
     if i == k[2:]
 }
+d = d[d["year"] <= 2019]
 d = d.rename(columns=labels_).set_index("year")
 d.plot(
     ax=ax_middle,
@@ -681,6 +686,7 @@ labels_ = {
     for i, r in corr_results.iterrows()
     if i == k[2:]
 }
+d = d[d["year"] <= 2019]
 d = d.rename(columns=labels_).set_index("year")
 d.plot(
     ax=ax_left,
@@ -703,6 +709,7 @@ labels_ = {
     for i, r in corr_results.iterrows()
     if i == k[2:]
 }
+d = d[d["year"] <= 2019]
 d = d.rename(columns=labels_).set_index("year")
 d.plot(
     ax=ax_middle,
