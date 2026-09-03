@@ -16,7 +16,7 @@ print("data_dir:", data_dir)
 print("results_dir:", results_dir)
 
 df = pd.read_csv(os.path.join(data_dir, "df.csv"))
-df = df[(df["year"] >= 2014) & (df["year"] <= 2022)]
+df = df[(df["year"] >= 2014) & (df["year"] <= 2021)]
 df = df.sort_values(by=["year", "name"])
 
 
